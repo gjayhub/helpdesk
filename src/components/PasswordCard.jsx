@@ -1,103 +1,88 @@
 "use client";
 
-import React from "react";
-import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 
-const passwordSchema = z
-  .object({
-    password: z
-      .string()
-      .refine(
-        (val) =>
-          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
-            val
-          ),
-        {
-          message:
-            "Password must be at least 8 characters long and contain at least one uppercase character, one lowercase character, and one special symbol",
-        }
-      ),
-    confirmPassword: z.string(),
-  })
-  .superRefine((val, ctx) => {
-    if (val.password !== val.confirmPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["confirmPassword"],
-        message: "Passwords do not match",
-      });
-    }
-  });
+import { useFormState } from "react-dom";
+import { sendResetPasswordReq } from "@/lib/action";
+import { useToast } from "./ui/use-toast";
+import { createClient } from "@/utils/supabase/client";
+const initialState = {
+  message: "",
+  error: "",
+};
 
 const PasswordCard = () => {
-  const passwordForm = useForm({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      password: "",
-      confirmPassword: "",
-    },
-  });
+  const [success, setSuccess] = useState(false);
+  const [email, setEmail] = useState();
 
-  function onPasswordSubmit(values) {
-    console.log(values);
-  }
+  const sendResetPassword = async (e) => {
+    e.preventDefault();
+
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "http://localhost:3000/ResetPassword",
+      });
+      setSuccess(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Password</CardTitle>
-        <CardDescription>You can change in your password here</CardDescription>
-      </CardHeader>
-
-      <Form {...passwordForm}>
-        <form
-          onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-          className="space-y-8 flex flex-col"
-        >
-          <FormField
-            control={passwordForm.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="New password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+    <Dialog>
+      <DialogTrigger asChild>
+        <p className="cursor-pointer text-center">Reset password</p>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Reset password</DialogTitle>
+          <DialogDescription>
+            Enter your email to send a password reset request
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={sendResetPassword}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="enter your email address"
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            {success && (
+              <p className="px-2 rounded bg-green-100 text-green-600">
+                Password reset request has been sent. Check your email to reset
+                your password
+              </p>
             )}
-          />
-          <FormField
-            control={passwordForm.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Confirm password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* <Button className={cn("text-center")} type="submit">
-            Submit
-          </Button> */}
+            <Button type="submit">Send</Button>
+          </DialogFooter>
         </form>
-      </Form>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 };
 

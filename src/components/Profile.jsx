@@ -6,48 +6,30 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountCard from "./AccountCard";
 import PasswordCard from "./PasswordCard";
-import { createClient } from "@/utils/supabase/client";
 
-const Profile = ({ isCollapsed }) => {
-  // useEffect(() => {
-  //   const getUser = async () => {
-  //     const supabase = createClient();
-  //     const { data, error } = await supabase.auth?.getUser();
-  //     console.log(data.user);
-  //   };
-  //   getUser();
-  // }, []);
-
+const Profile = ({ isCollapsed, profile }) => {
   return (
     <Popover>
       <PopoverTrigger
-        className={cn("flex gap-2 items-center [&>span]:items-center ")}
+        className={cn(
+          "flex gap-2 justify-center items-center [&>span]:items-center ",
+          isCollapsed &&
+            "flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&_p]:hidden"
+        )}
       >
         <Avatar>
           <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
-        <span className={cn(isCollapsed && "hidden")}>Admin</span>
+        <p>{profile?.full_name}</p>
       </PopoverTrigger>
       <PopoverContent>
-        <Tabs defaultValue="account">
-          <TabsList className="grid w-full grid-cols-2 ">
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="password">Password</TabsTrigger>
-          </TabsList>
-          <TabsContent value="account">
-            <AccountCard />
-          </TabsContent>
-          <TabsContent value="password">
-            <PasswordCard />
-          </TabsContent>
-        </Tabs>
+        <AccountCard profile={profile} />
+
+        <PasswordCard />
       </PopoverContent>
     </Popover>
   );

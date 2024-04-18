@@ -1,22 +1,16 @@
-import React from "react";
+"use client";
+import React, { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useRef } from "react";
 import { TicketPlus } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
 import {
   Select,
   SelectContent,
@@ -26,14 +20,22 @@ import {
 } from "@/components/ui/select";
 
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { createTicket } from "@/lib/action";
+import SubmitButton from "./ui/SubmitButton";
+import { useFormState } from "react-dom";
+import { useToast } from "./ui/use-toast";
+import { useRouter } from "next/navigation";
 
 const CreateTicket = () => {
+  const [state, formAction] = useFormState(createTicket, { status: null });
+  const formRef = useRef();
+  const { toast } = useToast();
+  const router = useRouter();
   const ticketSchema = z.object({
     title: z.string().min(2, {
       message: "Username must be at least 2 characters.",
@@ -52,27 +54,34 @@ const CreateTicket = () => {
       category: undefined,
     },
   });
-  function onTicketSubmit(values) {
-    console.log(values);
-  }
+
+  useEffect(() => {
+    if (state.status === "success") {
+      toast({
+        variant: "success",
+        description: "Ticket is created successfully!",
+      });
+      router.refresh();
+    }
+  }, [toast, state, router]);
 
   return (
     <div>
       <Popover>
         <PopoverTrigger
-          className={cn("flex gap-2 items-center [&>span]:items-center ")}
+          className={cn(
+            "flex  items-center justify-center [&>span]:items-center [&_svg]:items-center"
+          )}
         >
-          <div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TicketPlus />
-              </TooltipTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TicketPlus />
+            </TooltipTrigger>
 
-              <TooltipContent>
-                <p>Create a ticket</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+            <TooltipContent>
+              <p>Create a ticket</p>
+            </TooltipContent>
+          </Tooltip>
         </PopoverTrigger>
         <PopoverContent className="w-[400px]">
           <Card className="p-5">
@@ -81,7 +90,7 @@ const CreateTicket = () => {
             </CardHeader>
 
             <Form {...ticketForm}>
-              <form action={createTicket} className="space-y-8 flex flex-col">
+              <form action={formAction} className="space-y-8 flex flex-col">
                 <FormField
                   control={ticketForm.control}
                   name="title"
@@ -126,9 +135,8 @@ const CreateTicket = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="low">Not urgent</SelectItem>
+
                             <SelectItem value="urgent">Urgent</SelectItem>
                           </SelectContent>
                         </Select>
@@ -167,9 +175,7 @@ const CreateTicket = () => {
                   />
                 </div>
 
-                <Button className={cn("text-center")} type="submit">
-                  Submit
-                </Button>
+                <SubmitButton text="Submit" />
               </form>
             </Form>
           </Card>

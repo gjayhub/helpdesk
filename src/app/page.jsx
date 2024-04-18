@@ -3,18 +3,19 @@ import Profile from "@/components/Profile";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import Image from "next/image";
-import { getTickets } from "@/lib/action";
+import { getProfile, getTickets } from "@/lib/action";
+
+export const revalidate = 3600;
 
 export default async function Home({ searchParams }) {
   const supabase = createClient();
-
-  const initialTicket = await getTickets(searchParams);
-
   const { data, error } = await supabase.auth?.getUser();
   if (error || !data?.user) {
     redirect("/Login");
   }
+  const initialTicket = await getTickets(searchParams);
+  const user = await getProfile();
+
   const layout = cookies().get("react-resizable-panels:layout");
   const collapsed = cookies().get("react-resizable-panels:collapsed");
 
@@ -35,6 +36,7 @@ export default async function Home({ searchParams }) {
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={4}
           initialTickets={initialTicket}
+          profile={user}
         />
       </div>
     </main>

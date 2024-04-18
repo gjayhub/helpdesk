@@ -3,6 +3,7 @@ import { Input } from "./ui/input";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "./ui/button";
+import SubmitButton from "./ui/SubmitButton";
 
 const SearchBox = () => {
   const searchParams = useSearchParams();
@@ -12,7 +13,8 @@ const SearchBox = () => {
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams);
     params.delete("filter");
-
+    params.delete("day");
+    params.delete("id");
     if (searchTerm.trim() !== "") {
       params.set("query", searchTerm);
     } else {
@@ -41,7 +43,7 @@ const SearchBox = () => {
               className="pl-8"
             />
           </div>
-          <Button type="submit">Search</Button>
+          <SubmitButton text="Search" />
         </div>
       </form>
     </div>

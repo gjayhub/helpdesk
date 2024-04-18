@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Tooltip, TooltipTrigger } from "./ui/tooltip";
-import { Send, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Send, Trash2, SquarePen } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
-import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Switch } from "./ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   Accordion,
@@ -14,18 +12,41 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "./ui/scroll-area";
-import TimeAgo from "javascript-time-ago";
-import en from "javascript-time-ago/locale/en";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import moment from "moment";
-import { sendReply } from "@/lib/action";
+import { sendReply, updateStatus } from "@/lib/action";
 import "moment-timezone";
 import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import Progress from "./Progress";
+import { useProfileStore } from "@/lib/store/profile";
+import SubmitButton from "./ui/SubmitButton";
 
-const SingleTicket = ({ ticket, setTicket }) => {
-  const sendReplyTicket = sendReply.bind(null, ticket.ticket_id);
-  const [replies, setReplies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+const SingleTicket = ({
+  selected,
+  setSelected,
+  profile,
+  setTickets,
+  tickets,
+}) => {
+  const sendReplyTicket = sendReply.bind(null, selected.ticket_id);
   const supabase = createClient();
+  const { toast } = useToast();
+  const [progress, setProgress] = useState();
+  useEffect(() => {
+    setProgress(selected.progress);
+  }, [selected]);
 
   useEffect(() => {
     const channels = supabase
@@ -34,76 +55,218 @@ const SingleTicket = ({ ticket, setTicket }) => {
         "postgres_changes",
         { event: "*", schema: "public", table: "responses" },
         (payload) => {
-          setTicket({
-            ...ticket,
-            responses: [...ticket.responses, payload.new],
-          });
-          console.log(ticket.responses);
+          const index = tickets.findIndex(
+            (item) => item.ticket_id === selected.ticket_id
+          );
+          if (index !== -1) {
+            const updatedData = [...tickets]; // Create a copy of the data array
+            updatedData[index].responses.push(payload.new); // Push the new response to the responses array of the item
+            setTickets(updatedData); // Update the state with the modified data array
+            setSelected(updatedData[index]);
+          }
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channels);
     };
-  }, [supabase, ticket]);
+  }, [supabase, selected, tickets, setTickets, setSelected]);
+
+  const handleUpdate = async () => {
+    let status;
+    if (progress == 0) status = "new";
+    if (progress > 0 && progress < 100) status = "ongoing";
+    if (progress == 100) status = "resolved";
+
+    try {
+      const { data, error } = await supabase
+        .from("tickets")
+        .update({ progress, status })
+        .eq("ticket_id", selected.ticket_id)
+        .select();
+
+      setTickets((prev) => {
+        const index = prev.findIndex(
+          (item) => item.ticket_id === selected.ticket_id
+        );
+        if (index !== -1) {
+          const updatedData = [...new Set(prev)]; // Create a copy of the array
+          updatedData[index] = { ...updatedData[index], progress, status }; // Update the item
+          setSelected(updatedData[index]);
+
+          return updatedData; // Return the updated array
+        }
+
+        return updatedData;
+      });
+      toast({
+        variant: "success",
+        title: "Updated succesfully",
+        description: `Ticket progress is updated to ${progress}%`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleProgressChange = (e) => {
+    setProgress(e.target.value);
+  };
+
+  const validateUpdate = () => {
+    if (progress > 0 && progress < 100) {
+      return (
+        <>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you want to update the progress to {progress} sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Progress will be updated to {progress} and status will be set to
+              <span className="font-bold"> ongoing</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <span className="cursor-pointer" onClick={() => handleUpdate()}>
+                Continue
+              </span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </>
+      );
+    }
+    if (progress == 100) {
+      return (
+        <>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you want to update the progress to {progress} sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Progress will be updated to {progress} and status will be set to{" "}
+              <span className="font-bold">resolved</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <span className="cursor-pointer" onClick={() => handleUpdate()}>
+                Continue
+              </span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </>
+      );
+    }
+    return (
+      <>
+        <AlertDialogTitle>
+          <p className="text-red-500">Cant revert back to 0%!</p>
+        </AlertDialogTitle>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Okay</AlertDialogCancel>
+        </AlertDialogFooter>
+      </>
+    );
+  };
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center p-4 gap-3">
-        <div className="flex items-center ">
-          <Tooltip>
-            <TooltipTrigger>
-              <Trash2 className="h-4 w-4" />
-            </TooltipTrigger>
-          </Tooltip>
-        </div>
-        <Separator orientation="vertical" />
-
-        <div className="flex items-center justify-around [&_input]:mt-1 w-full">
-          <p className="p-0 m-0 font-semibold text-sm text-nowrap">
-            {ticket.status}
+      {profile.role === "user" ? (
+        <div className="flex justify-around h-[52px] items-center  gap-6 px-10">
+          <p className="p-0 m-0 font-semibold text-sm text-nowrap  ">
+            {selected.status}
           </p>
-          <input type="range" min={0} max={100} />
-        </div>
 
-        <Separator orientation="vertical" />
-        <Tooltip>
-          <TooltipTrigger>
-            <Send className="h-4 w-4" />
-          </TooltipTrigger>
-        </Tooltip>
-      </div>
+          <Progress progress={progress} />
+        </div>
+      ) : (
+        <div className="flex  justify-center  gap-3 px-4 py-3.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Trash2 />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Delete ticket</p>
+            </TooltipContent>
+          </Tooltip>
+          <Separator orientation="vertical" />
+
+          <div className="flex items-center justify-around [&_input]: w-full">
+            <p className="p-0 m-0 font-semibold text-sm text-nowrap capitalize">
+              {selected.category}
+            </p>
+            <p className="p-0 m-0 font-semibold text-sm text-nowrap capitalize">
+              {selected.status}
+            </p>
+
+            <Tooltip>
+              <TooltipTrigger>
+                <input
+                  value={progress || 0}
+                  name="progress"
+                  type="range"
+                  min={0}
+                  max={100}
+                  onChange={(e) => setProgress(e.target.value)}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <span>Status</span>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          <Separator orientation="vertical" />
+          <AlertDialog>
+            <AlertDialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SquarePen className="h-5" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Update ticket</p>
+                </TooltipContent>
+              </Tooltip>
+            </AlertDialogTrigger>
+            <AlertDialogContent>{validateUpdate()}</AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
       <Separator />
-      {ticket ? (
+      {selected ? (
         <div className="flex flex-1 flex-col">
           <div className="flex items-start p-4">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
                 <AvatarImage alt="Namae" />
                 <AvatarFallback>
-                  {ticket.profiles.full_name
+                  {selected.profiles.full_name
                     .split(" ")
                     .map((chunk) => chunk[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
-                <div className="font-semibold">{ticket.profiles.full_name}</div>
-                <div className="line-clamp-1 text-xs">{ticket.title}</div>
+                <div className="font-semibold">
+                  {selected.profiles.full_name}
+                </div>
+                <div className="line-clamp-1 text-xs">{selected.title}</div>
                 <div className="line-clamp-1 text-xs">
                   <span className="font-medium">Reply-To:</span>{" "}
-                  {ticket.profiles.email}
+                  {selected.profiles.email}
                 </div>
               </div>
             </div>
 
             <div className="ml-auto text-xs text-muted-foreground">
-              {moment(ticket.created_at).calendar()}
+              {moment(selected.created_at).calendar()}
             </div>
           </div>
           <Separator />
           <div className="flex-1 whitespace-pre-wrap p-4 text-sm">
-            {ticket.description}
+            {selected.description}
           </div>
           <Separator className="mt-auto" />
 
@@ -113,14 +276,16 @@ const SingleTicket = ({ ticket, setTicket }) => {
                 <AccordionTrigger>Replies</AccordionTrigger>
                 <AccordionContent>
                   <ScrollArea className="h-60 relative flex ">
-                    {ticket.responses.map((response) => {
+                    {selected.responses.map((response) => {
                       return (
                         <div
                           key={response.id}
                           className="bg-slate-100 mr-20 p-2 w-full rounded-sm mb-5"
                         >
                           <p className="font-semibold ">
-                            {ticket.profiles.full_name}
+                            {profile.full_name === response.sender_name
+                              ? "You"
+                              : response.sender_name}
                           </p>
 
                           <p className="py-1">{response.response_text}</p>
@@ -139,12 +304,10 @@ const SingleTicket = ({ ticket, setTicket }) => {
                 <Textarea
                   name="reply"
                   className="p-4"
-                  placeholder={`Reply ${ticket.profiles.full_name}...`}
+                  placeholder={`Reply ${selected.profiles.full_name}...`}
                 />
                 <div className="flex items-center">
-                  <Button type="submit" size="sm" className="ml-auto">
-                    Send
-                  </Button>
+                  <SubmitButton text="Send" customStyle="ml-auto" />
                 </div>
               </div>
             </form>

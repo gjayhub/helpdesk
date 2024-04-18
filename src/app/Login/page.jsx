@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { useFormState } from "react-dom";
 import {
   Card,
   CardDescription,
@@ -22,22 +22,22 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { login, signup } from "./action";
+import SubmitButton from "@/components/ui/SubmitButton";
 
 const loginSchema = z.object({
   email: z.string().min(2, {
     message: "Username must be at least 2 characters.",
   }),
-  password: z
-    .string()
-    .refine(
-      (val) =>
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
-          val
-        ),
-      {
-        message: "Invalid password",
-      }
-    ),
+  password: z.string(),
+  // .refine(
+  //   (val) =>
+  //     /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
+  //       val
+  //     ),
+  //   {
+  //     message: "Invalid password",
+  //   }
+  // ),
 });
 const signupSchema = z
   .object({
@@ -45,18 +45,17 @@ const signupSchema = z
       message: "Username must be at least 2 characters.",
     }),
     email: z.string(),
-    password: z
-      .string()
-      .refine(
-        (val) =>
-          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
-            val
-          ),
-        {
-          message:
-            "Password must be at least 8 characters long and contain at least one uppercase character, one lowercase character, and one special symbol",
-        }
-      ),
+    password: z.string(),
+    // .refine(
+    //   (val) =>
+    //     /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
+    //       val
+    //     ),
+    //   {
+    //     message:
+    //       "Password must be at least 8 characters long and contain at least one uppercase character, one lowercase character, and one special symbol",
+    //   }
+    // ),
     confirmPassword: z.string(),
   })
   .superRefine((val, ctx) => {
@@ -70,6 +69,9 @@ const signupSchema = z
   });
 
 const Login = () => {
+  const [state, loginAction] = useFormState(login, { error: null });
+  const [signupState, signupAction] = useFormState(signup, { error: null });
+
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -86,7 +88,6 @@ const Login = () => {
       confirmPassword: "",
     },
   });
-
   return (
     <div className="flex justify-center items-center">
       <Tabs defaultValue="login" className="w-2/5 p-5">
@@ -101,7 +102,7 @@ const Login = () => {
             </CardHeader>
 
             <Form {...loginForm}>
-              <form action={login} className="space-y-8 flex flex-col">
+              <form action={loginAction} className="space-y-8 flex flex-col">
                 <FormField
                   control={loginForm.control}
                   name="email"
@@ -134,10 +135,12 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-
-                <Button className={cn("text-center")} type="submit">
-                  Submit
-                </Button>
+                {state.error && (
+                  <span className="text-red-500 text-center text-sm">
+                    {state.error}
+                  </span>
+                )}
+                <SubmitButton text="Submit" />
               </form>
             </Form>
           </Card>
@@ -149,7 +152,7 @@ const Login = () => {
             </CardHeader>
 
             <Form {...signupForm}>
-              <form action={signup} className="space-y-8 flex flex-col">
+              <form action={signupAction} className="space-y-8 flex flex-col">
                 <FormField
                   control={signupForm.control}
                   name="fullname"
@@ -211,9 +214,12 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-                <Button className={cn("text-center")} type="submit">
-                  Submit
-                </Button>
+                {signupState.error && (
+                  <span className="text-red-500 text-center text-sm">
+                    {signupState.error}
+                  </span>
+                )}
+                <SubmitButton text="Submit" />
               </form>
             </Form>
           </Card>

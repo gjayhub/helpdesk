@@ -1,13 +1,13 @@
 import { logout } from "@/lib/action";
 import { SquareArrowOutDownLeft } from "lucide-react";
 
+import LogoutBtn from "./ui/logoutBtn";
+import SubmitButton from "./ui/SubmitButton";
+
 const LogoutUser = () => {
   return (
     <form action={logout}>
-      <button type="submit">
-        <SquareArrowOutDownLeft />
-        <p>logout</p>
-      </button>
+      <LogoutBtn />
     </form>
   );
 };

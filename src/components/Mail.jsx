@@ -11,25 +11,32 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import useSWR from "swr";
-import Tab from "./Profile";
+
 import Profile from "./Profile";
 import Nav from "./Nav";
 import TicketList from "./TicketList";
 import SingleTicket from "./SingleTicket";
 import CreateTicket from "./CreateTicket";
-import { getTickets } from "@/lib/action";
 import SearchBox from "./SearchBox";
-
+import { useGlobalContext } from "@/Context/store";
+import { useProfileStore } from "@/lib/store/profile";
+import { useCollapsed } from "@/lib/store/collapse";
 const Mail = ({
   defaultLayout = [20, 35, 45],
   defaultCollapsed,
   navCollapsedSize,
   initialTickets,
+  profile,
+  children,
 }) => {
+  const setProfile = useProfileStore((state) => state.setProfile);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
   const [tickets, setTickets] = useState(initialTickets);
-  const [selected, setSelected] = useState();
+
+  const [selected, setSelected] = useState(initialTickets[0]);
+
+  setProfile(profile);
 
   return (
     <TooltipProvider>
@@ -66,24 +73,24 @@ const Mail = ({
         >
           <div
             className={cn(
-              "flex h-[52px] items-center",
+              "flex h-[52px] items-center justify-center",
               isCollapsed ? "h-[52px]" : "px-2"
             )}
           >
             <Suspense fallback={<p>Loading</p>}>
-              <Profile isCollapsed={isCollapsed} />
+              <Profile profile={profile} isCollapsed={isCollapsed} />
             </Suspense>
           </div>
           <Separator />
           <div>
-            <Nav isCollapsed={isCollapsed} />
+            <Nav isCollapsed={isCollapsed} profile={profile} />
           </div>
         </ResizablePanel>
+
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
           <div className="flex justify-between px-4 py-3">
             <h1 className="text-xl font-bold">Tickets</h1>
-
             <CreateTicket />
           </div>
           <Separator />
@@ -94,16 +101,23 @@ const Mail = ({
               setTickets={setTickets}
               setSelected={setSelected}
               selected={selected}
+              initialTickets={initialTickets}
             />
           </div>
         </ResizablePanel>
-        {/* <ResizableHandle withHandle />
+        <ResizableHandle withHandle />
 
         <ResizablePanel minSize={25} defaultSize={defaultLayout[2]}>
           {selected && (
-            <SingleTicket ticket={selected} setTicket={setSelected} />
+            <SingleTicket
+              selected={selected}
+              setSelected={setSelected}
+              profile={profile}
+              setTickets={setTickets}
+              tickets={tickets}
+            />
           )}
-        </ResizablePanel> */}
+        </ResizablePanel>
       </ResizablePanelGroup>
     </TooltipProvider>
   );

@@ -1,7 +1,11 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
+import { GlobalContextProvider } from "@/Context/store";
+import { Toaster } from "@/components/ui/toaster";
+import { useProfileStore } from "@/lib/store/profile";
+import { getProfile } from "@/lib/action";
+import { CookiesProvider } from "next-client-cookies/server";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata = {
@@ -18,7 +22,9 @@ export default function RootLayout({ children }) {
           inter.variable
         )}
       >
-        {children}
+        <Toaster />
+
+        <GlobalContextProvider>{children}</GlobalContextProvider>
       </body>
     </html>
   );
