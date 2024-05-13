@@ -1,5 +1,3 @@
-"use client";
-import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -9,20 +7,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountCard from "./AccountCard";
 import PasswordCard from "./PasswordCard";
+import { getProfile } from "@/lib/action";
 
-const Profile = ({ isCollapsed, profile }) => {
+const Profile = async ({ profile }) => {
   return (
     <Popover>
-      <PopoverTrigger
-        className={cn(
-          "flex gap-2 justify-center items-center [&>span]:items-center ",
-          isCollapsed &&
-            "flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&_p]:hidden"
-        )}
-      >
+      <PopoverTrigger className={cn("flex gap-2 items-center ")}>
         <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarImage alt="Namae" />
+          <AvatarFallback>
+            {profile?.full_name
+              .split(" ")
+              .map((chunk) => chunk[0])
+              .join("")}
+          </AvatarFallback>
         </Avatar>
         <p>{profile?.full_name}</p>
       </PopoverTrigger>

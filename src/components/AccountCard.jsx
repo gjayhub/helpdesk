@@ -1,19 +1,20 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
 import { updateProfile } from "@/lib/action";
-import { Loader } from "lucide-react";
 import SubmitButton from "./ui/SubmitButton";
+import { useFormState } from "react-dom";
+import { toast } from "./ui/use-toast";
 const AccountCard = ({ profile }) => {
-  const [isInputEmpty, setIsInputEmpty] = useState(true);
-
+  const [state, formAction] = useFormState(updateProfile, { status: null });
+  useEffect(() => {
+    if (state.status === "success") {
+      toast({
+        variant: "success",
+        description: "Account is updated successfully!",
+      });
+    }
+  }, [state]);
   return (
     <Card>
       <CardHeader>
@@ -23,7 +24,10 @@ const AccountCard = ({ profile }) => {
         </CardDescription>
       </CardHeader>
 
-      <form action={updateProfile} className="space-y-8 flex flex-col">
+      <form
+        action={formAction}
+        className="space-y-8  flex flex-col [&_input]:px-2"
+      >
         <input name="fullname" placeholder={`${profile?.full_name}`} />
 
         <input type="email" name="email" placeholder={profile?.email} />

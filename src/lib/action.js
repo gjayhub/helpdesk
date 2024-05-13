@@ -36,18 +36,28 @@ export const createTicket = async (prevState, formData) => {
     .select(`"*",profiles("*")`);
 
   const newTicket = ticketRes[0];
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // const { data } = await resend.emails.send({
-  //   from: "Acme <onboarding@resend.dev>",
-  //   to: ["geejayrivera@gmail.com"],
-  //   subject: "A new ticket is created",
-  //   react: EmailTemplate({
-  //     url: `http://localhost:3000/?id=${newTicket.ticket_id}`,
-  //     name: newTicket.profiles.full_name,
-  //   }),
-  // });
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { data } = await resend.emails.send({
+    from: "Acme <onboarding@resend.dev>",
+    to: ["geejayrivera@gmail.com"],
+    subject: "A new ticket is created",
+    react: EmailTemplate({
+      url: `http://localhost:3000/?id=${newTicket.ticket_id}`,
+      name: newTicket.profiles.full_name,
+    }),
+  });
 
   return { status: "success" };
+};
+
+export const deleteTicket = async (ticket_id) => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("tickets")
+    .delete()
+    .eq("ticket_id", ticket_id);
+  revalidatePath("/home");
 };
 
 export const getProfile = async () => {
@@ -67,20 +77,24 @@ export const getProfile = async () => {
   return profile;
 };
 
-export const updateProfile = async (formData) => {
+export const updateProfile = async (prevState, formData) => {
   const email = formData.get("email");
   const full_name = formData.get("fullname");
   const supabase = createClient();
   const profile = await getProfile();
+  try {
+    if (email) {
+      await updateUserEmail(email, profile.id, supabase);
+    }
 
-  if (email) {
-    await updateUserEmail(email, profile.id, supabase);
+    if (full_name) {
+      await updateFullName(full_name, profile.id, supabase);
+    }
+    revalidatePath("/");
+    return { status: "success" };
+  } catch (error) {
+    console.log(error);
   }
-
-  if (full_name) {
-    await updateFullName(full_name, profile.id, supabase);
-  }
-  revalidatePath("/");
 };
 
 const updateUserEmail = async (email, profileId, supabase) => {
@@ -90,7 +104,7 @@ const updateUserEmail = async (email, profileId, supabase) => {
   }
 };
 
-const updateFullName = async (fullName, profileId, supabase) => {
+export const updateFullName = async (fullName, profileId, supabase) => {
   await supabase
     .from("profiles")
     .update({ full_name: fullName })

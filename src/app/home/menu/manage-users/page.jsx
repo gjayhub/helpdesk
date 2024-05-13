@@ -9,14 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import { getUsers } from "./action";
-import TicketsBtn from "../(component)/ui/TicketsBtn";
-import PaginationComponent from "../(component)/ui/pagination";
+import TicketsBtn from "../(components)/TicketsBtn";
+import PaginationComponent from "../(components)/pagination";
+import ActionOptions from "./ActionOptions";
 const ManageUsers = async ({ searchParams }) => {
   const { users, count } = await getUsers(searchParams);
 
   return (
-    <div className="mt-2">
+    <div className="mt-8">
       <Table>
         <TableHeader>
           <TableRow>
@@ -35,8 +37,7 @@ const ManageUsers = async ({ searchParams }) => {
                 <TicketsBtn id={user.id} total={user.tickets} />
               </TableCell>
               <TableCell className="text-center [&_span]:px-2">
-                <span>Delete</span>
-                <span>Edit</span>
+                <ActionOptions user={user} />
               </TableCell>
             </TableRow>
           ))}

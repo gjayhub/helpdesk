@@ -55,7 +55,8 @@ const ReportTickets = ({ tickets }) => {
         <div>
           <table
             id="report-table"
-            className="text-sm w-full text-left rtl:text-right text-black "
+            style={{ width: "100%", tableLayout: "auto" }}
+            className="text-sm text-left rtl:text-right text-black  "
           >
             <thead className="text-xs  uppercase ">
               <tr>
@@ -84,15 +85,14 @@ const ReportTickets = ({ tickets }) => {
                 return (
                   <tr
                     key={ticket.ticket_id}
-                    className="odd:bg-white odd:dark:bg-gray-300 even:bg-gray-50 even:dark:bg-gray-100 border-b dark:border-gray-700"
+                    className="odd:bg-white  odd:dark:bg-gray-400 even:bg-gray-100 even:dark:bg-gray-100 border-b dark:border-gray-700"
                   >
-                    <th
-                      scope="row"
-                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap "
-                    >
-                      {ticket.title}
+                    <th scope="row" className="pl-4 font-medium text-gray-900 ">
+                      <p className="line-clamp-2">
+                        {ticket.title?.substring(0, 300)}
+                      </p>
                     </th>
-                    <td className="px-6 py-4 text-center">
+                    <td className="text-balance line-clamp-2">
                       {ticket.description}
                     </td>
 

@@ -27,7 +27,7 @@ export async function login(prevState, formData) {
     return { error: error.message.toString() };
   }
 
-  redirect("/");
+  redirect("/home");
 }
 
 export async function signup(prevState, formData) {

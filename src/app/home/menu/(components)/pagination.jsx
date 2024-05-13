@@ -13,6 +13,7 @@ const PaginationComponent = ({ count }) => {
   const totalCount = count;
   const itemsPerPage = 10;
   const totalPages = Math.ceil(totalCount / itemsPerPage);
+
   return (
     <Pagination
       page={page}
@@ -24,9 +25,9 @@ const PaginationComponent = ({ count }) => {
         },
       }}
       defaultPage={1}
-      showLastButton
-      showFirstButton
       shape="rounded"
+      showFirstButton
+      showLastButton
       renderItem={(item) => {
         const queryParams = {};
         if (query) {
@@ -43,6 +44,9 @@ const PaginationComponent = ({ count }) => {
                 ...queryParams,
                 page: item.page,
               },
+            }}
+            style={{
+              pointerEvents: item.disabled ? "none" : "auto",
             }}
           >
             <PaginationItem sx={{ color: "#050315" }} {...item} />

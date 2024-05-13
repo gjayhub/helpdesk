@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const TicketsBtn = ({ total, id }) => {
   const ticketCount = total[0];
-  return <Link href={`/?id=${id}`}>{ticketCount.count}</Link>;
+  return <Link href={`/home?id=${id}`}>{ticketCount.count}</Link>;
 };
 
 export default TicketsBtn;

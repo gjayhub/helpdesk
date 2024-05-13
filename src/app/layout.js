@@ -6,6 +6,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { useProfileStore } from "@/lib/store/profile";
 import { getProfile } from "@/lib/action";
 import { CookiesProvider } from "next-client-cookies/server";
+import { Separator } from "@/components/ui/separator";
+import Nav from "@/components/Nav/Nav";
+import Profile from "@/components/Profile";
+import { Suspense } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata = {
@@ -16,16 +21,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable
-        )}
-      >
-        <Toaster />
+      <TooltipProvider>
+        <body
+          className={cn(
+            "min-h-screen bg-background font-sans antialiased",
+            inter.variable
+          )}
+        >
+          <Toaster />
 
-        <GlobalContextProvider>{children}</GlobalContextProvider>
-      </body>
+          <GlobalContextProvider>{children}</GlobalContextProvider>
+        </body>
+      </TooltipProvider>
     </html>
   );
 }

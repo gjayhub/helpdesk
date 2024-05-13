@@ -80,7 +80,7 @@ const ReportList = ({ tickets }) => {
       );
     }
 
-    return <Link href={`/?day=${day}&filter=${filter}`}>{number}</Link>;
+    return <Link href={`/home?day=${day}&filter=${filter}`}>{number}</Link>;
   };
   const downloadPDF = () => {
     const doc = new jsPDF();
@@ -94,7 +94,16 @@ const ReportList = ({ tickets }) => {
     });
     doc.save("Report.pdf");
   };
+  let totalNotStarted = 0;
+  let totalOnGoing = 0;
+  let totalResolved = 0;
 
+  // Loop through ticketCountsByDay to sum up totals
+  Object.values(ticketCountsByDay).forEach((counts) => {
+    totalNotStarted += counts.notStarted;
+    totalOnGoing += counts.onGoing;
+    totalResolved += counts.resolved;
+  });
   return (
     <div className="ml-10  w-3/4">
       <div className="flex justify-between items-center px-4">
@@ -159,6 +168,16 @@ const ReportList = ({ tickets }) => {
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr>
+                  <th className="px-6 py-3" colSpan={1}>
+                    Total:
+                  </th>
+                  <th className="px-6 py-3 text-center">{totalNotStarted}</th>
+                  <th className="px-6 py-3 text-center">{totalOnGoing}</th>
+                  <th className="px-6 py-3 text-center">{totalResolved}</th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ) : (

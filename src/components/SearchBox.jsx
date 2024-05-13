@@ -3,7 +3,6 @@ import { Input } from "./ui/input";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "./ui/button";
-import SubmitButton from "./ui/SubmitButton";
 
 const SearchBox = () => {
   const searchParams = useSearchParams();
@@ -20,7 +19,7 @@ const SearchBox = () => {
     } else {
       params.delete("query");
     }
-    replace(`/?${params.toString()}`);
+    replace(`/home/?${params.toString()}`);
   };
 
   return (
@@ -43,7 +42,7 @@ const SearchBox = () => {
               className="pl-8"
             />
           </div>
-          <SubmitButton text="Search" />
+          <Button type="submit">Search</Button>
         </div>
       </form>
     </div>

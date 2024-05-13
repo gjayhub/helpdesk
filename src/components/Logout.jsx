@@ -6,7 +6,7 @@ import SubmitButton from "./ui/SubmitButton";
 
 const LogoutUser = () => {
   return (
-    <form action={logout}>
+    <form className="px-1" action={logout}>
       <LogoutBtn />
     </form>
   );
