@@ -6,8 +6,6 @@ import ReportList from "../(components)/ReportList";
 import ReportTickets from "../(components)/ReportTickets";
 import Header from "./Header";
 
-export const revalidate = 3600;
-
 const Report = async () => {
   const tickets = await allTicket();
   return (

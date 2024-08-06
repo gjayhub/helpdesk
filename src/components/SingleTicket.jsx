@@ -26,6 +26,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -46,6 +47,8 @@ import SubmitButton from "./ui/SubmitButton";
 import { useRouter } from "next/navigation";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { Switch } from "./ui/switch";
+import { revalidatePath } from "next/cache";
 
 const FormSchema = z.object({
   type: z.enum(["all", "mentions", "none"], {
@@ -66,6 +69,8 @@ const SingleTicket = ({
   const responseRef = useRef(null);
   const [progress, setProgress] = useState();
   const [remark, setRemark] = useState(null);
+  const [isPublic, setIsPublic] = useState(selected.is_public);
+  const router = useRouter();
   useEffect(() => {
     setProgress(selected.progress);
   }, [selected]);
@@ -171,6 +176,21 @@ const SingleTicket = ({
       });
     } catch (error) {
       console.log(error);
+    }
+  };
+  const handleTransparency = async () => {
+    const { data, error } = await supabase
+      .from("tickets")
+      .update({ is_public: isPublic })
+      .eq("ticket_id", selected.ticket_id)
+      .select();
+    if (!error) {
+      toast({
+        variant: "success",
+        title: "Updated succesfully",
+        description: `Ticket transparency is set to ${isPublic}`,
+      });
+      router.refresh();
     }
   };
 
@@ -286,8 +306,8 @@ const SingleTicket = ({
                 <TooltipTrigger
                   onClick={() => handleDelete(selected.ticket_id)}
                 >
-                  <Trash2 />
-                </TooltipTrigger>{" "}
+                  <Trash2 color="red" />
+                </TooltipTrigger>
                 <TooltipContent>
                   <p>Delete ticket</p>
                 </TooltipContent>
@@ -324,7 +344,7 @@ const SingleTicket = ({
                 <AlertDialogTrigger>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <SquarePen className="h-5" />
+                      <SquarePen color="green" className="h-5" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Update ticket</p>
@@ -335,6 +355,54 @@ const SingleTicket = ({
               </AlertDialog>
             </div>
           )}
+          <Separator />
+          <div className="flex justify-between px-5">
+            <div>
+              <p className="font-bold">Set Transparency</p>
+              <p className="text-sm text-muted-foreground">
+                This will make the ticket public
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Switch
+                  className="my-2 bg-blue-700"
+                  checked={isPublic}
+                  onCheckedChange={() => setIsPublic((prev) => !prev)}
+                />
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you sure you want to update the transparency to
+                    {isPublic ? <span> true</span> : <span> false</span>} ?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This ticket will {!isPublic && <span>not </span>} be visible
+                    to all users
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel asChild>
+                    <span
+                      className="text-black"
+                      onClick={() => setIsPublic((prev) => !prev)}
+                    >
+                      Cancel
+                    </span>
+                  </AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <span
+                      className="cursor-pointer"
+                      onClick={() => handleTransparency()}
+                    >
+                      Continue
+                    </span>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           <Separator />
 
           <div className="flex flex-1 flex-col">
@@ -405,16 +473,25 @@ const SingleTicket = ({
                   responseRef.current.reset();
                 }}
               >
-                <div className="grid gap-4">
-                  <Textarea
-                    name="reply"
-                    className="p-4"
-                    placeholder={`Reply ${selected.profiles.full_name}...`}
-                  />
-                  <div className="flex items-center">
-                    <SubmitButton text="Send" customStyle="ml-auto" />
+                {selected?.status === "resolved" ? (
+                  <div>
+                    <p className="text-center italic font-light">
+                
+                      Reply is turned-off. Ticket has been resolved
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid gap-4">
+                    <Textarea
+                      name="reply"
+                      className="p-4"
+                      placeholder={`Reply ${selected.profiles.full_name}...`}
+                    />
+                    <div className="flex items-center">
+                      <SubmitButton text="Send" customStyle="ml-auto" />
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
           </div>

@@ -2,13 +2,13 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-
   const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("tickets")
       .select(`"*",profiles("*"), responses("*")`)
-      .range(0, 1)
+      .eq("status", "new")
+      .range(0, 10)
       .order("created_at", {
         ascending: false,
       });

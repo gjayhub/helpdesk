@@ -10,7 +10,7 @@ const SubmitButton = ({ text, customStyle }) => {
   return (
     <Button
       disabled={pending}
-      className={cn("text-center", customStyle)}
+      className={cn("text-center bg-blue-500 hover:bg-blue-700", customStyle)}
       type="submit"
     >
       {pending ? (

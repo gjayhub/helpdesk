@@ -34,13 +34,14 @@ const TicketList = ({
   initialTickets,
   profile,
 }) => {
+  // const { ticketsData, isLoading } = useGlobalContext();
+
   const [offset, setOffset] = useState(2);
   const { ref, inView } = useInView();
   const [noMoreTicket, setNoMoreTicket] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { setTicketsCount } = useGlobalContext();
   const filter = searchParams.get("filter");
   const query = searchParams.get("query");
   const id = searchParams.get("id");
@@ -51,7 +52,7 @@ const TicketList = ({
   useEffect(() => {
     if (inView && !noMoreTicket) {
       const loadMoreTickets = async () => {
-        setIsLoading(true);
+        setIsLoadingMore(true);
         setNoMoreTicket(false);
         const searchFilter = {
           page: offset,
@@ -65,10 +66,10 @@ const TicketList = ({
         if (moreTickets.length !== 0) {
           setOffset((prev) => prev + 1);
           setTickets([...tickets, ...moreTickets]);
-          setIsLoading(false);
+          setIsLoadingMore(false);
         } else {
           setNoMoreTicket(true);
-          setIsLoading(false);
+          setIsLoadingMore(false);
         }
       };
 
@@ -108,7 +109,7 @@ const TicketList = ({
           }
           return updatedTicket;
         }
-        return updatedTicket;
+        return;
       });
     };
     const channels = supabase
@@ -124,14 +125,12 @@ const TicketList = ({
           if (payload.eventType === "DELETE") {
             return;
           }
-
           const search = [];
           for (const value of searchParams.values()) {
             search.push(value);
           }
           const matchesSearchParams = () => {
             if (!searchParams) return true; // If no searchParams, all tickets match
-
             return (
               !search.length ||
               ["status", "priority"].some((field) =>
@@ -139,7 +138,6 @@ const TicketList = ({
               )
             );
           };
-
           if (matchesSearchParams()) {
             const { data: profiles, error } = await supabase
               .from("profiles")
@@ -179,7 +177,6 @@ const TicketList = ({
         .update({ is_updated: false })
         .eq("ticket_id", ticket.ticket_id)
         .select();
-      console.log("triggered");
     }
   };
   const filtered = [...new Set(tickets)];
@@ -192,8 +189,8 @@ const TicketList = ({
             <div
               key={ticket.ticket_id}
               className={cn(
-                "flex flex-col cursor-pointer relative items-start gap-2 rounded-lg border bg-inherit p-3 text-black text-left text-sm transition-all hover:bg-slate-300",
-                selected?.ticket_id === ticket.ticket_id && "bg-slate-200"
+                "flex flex-col cursor-pointer relative items-start gap-2 rounded-lg border bg-inherit p-3 text-black text-left text-sm transition-all hover:bg-blue-200",
+                selected?.ticket_id === ticket?.ticket_id && "bg-blue-200"
               )}
               onClick={() => {
                 handleNewUpdates(ticket);
@@ -208,7 +205,7 @@ const TicketList = ({
                 </div>
               )}
               {ticket.is_updated && (
-                <div className="absolute px-1 right-1 top-1 bg-black animate-bounce rounded-md text-xs text-white">
+                <div className="absolute px-1 right-1 top-1 bg-yellow-400 animate-bounce rounded-md text-xs text-white">
                   New updates
                 </div>
               )}
@@ -250,7 +247,7 @@ const TicketList = ({
           className="font-light text-center italic [&_svg]:mx-auto"
         >
           {noMoreTicket && <p>End of the list</p>}
-          {isLoading && <Loader className="animate-spin" />}
+          {isLoadingMore && <Loader className="animate-spin" />}
         </div>
       </div>
     </ScrollArea>

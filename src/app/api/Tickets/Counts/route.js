@@ -45,11 +45,24 @@ export async function GET() {
         .select(`"*",profiles("full_name")`, { count: "exact", head: true })
         .match(filter)
         .then(({ count }) => count),
+
+      supabase
+        .from("tickets")
+        .select(`"*",profiles("full_name")`, { count: "exact", head: true })
+        .eq("is_public", true)
+
+        .then(({ count }) => count),
     ];
 
     // Wait for all promises to resolve
-    const [newTickets, ongoingTickets, resolvedTickets, urgentTickets, total] =
-      await Promise.all(promises);
+    const [
+      newTickets,
+      ongoingTickets,
+      resolvedTickets,
+      urgentTickets,
+      total,
+      publicTickets,
+    ] = await Promise.all(promises);
 
     return NextResponse.json(
       {
@@ -58,6 +71,7 @@ export async function GET() {
         resolvedTickets,
         urgentTickets,
         total,
+        publicTickets,
       },
       { status: 200 }
     );

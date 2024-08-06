@@ -10,7 +10,15 @@ import { useRef } from "react";
 import { TicketPlus } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 import {
   Select,
   SelectContent,
@@ -30,6 +38,7 @@ import SubmitButton from "./ui/SubmitButton";
 import { useFormState } from "react-dom";
 import { useToast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
+import { Switch } from "./ui/switch";
 
 const CreateTicket = () => {
   const [state, formAction] = useFormState(createTicket, { status: null });
@@ -70,12 +79,12 @@ const CreateTicket = () => {
       <Popover>
         <PopoverTrigger
           className={cn(
-            "flex  items-center justify-center [&>span]:items-center [&_svg]:items-center"
+            "flex items-center justify-center [&>span]:items-center [&_svg]:items-center"
           )}
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <TicketPlus />
+              <TicketPlus color="blue" />
             </TooltipTrigger>
 
             <TooltipContent>
@@ -115,7 +124,7 @@ const CreateTicket = () => {
                     </FormItem>
                   )}
                 />
-                <div className="flex justify-between">
+                <div className="flex justify-between flex-wrap">
                   <FormField
                     control={ticketForm.control}
                     name="priority"

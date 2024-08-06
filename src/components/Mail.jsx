@@ -11,6 +11,7 @@ import SingleTicket from "./SingleTicket";
 import CreateTicket from "./CreateTicket";
 import SearchBox from "./SearchBox";
 import { TicketIcon, X } from "lucide-react";
+import AgencyTabs from "./AgencyTabs";
 
 const Mail = ({ initialTickets, profile, defaultLayout = [40, 60] }) => {
   const [tickets, setTickets] = useState(initialTickets);
@@ -34,7 +35,11 @@ const Mail = ({ initialTickets, profile, defaultLayout = [40, 60] }) => {
             <CreateTicket />
           </div>
           <Separator />
+
           <SearchBox />
+          <div className="flex justify-center">
+            <AgencyTabs />
+          </div>
           <div>
             <TicketList
               tickets={tickets}

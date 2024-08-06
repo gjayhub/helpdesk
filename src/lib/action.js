@@ -25,6 +25,7 @@ export const createTicket = async (prevState, formData) => {
     description: formData.get("desc"),
     priority: formData.get("priority"),
     category: formData.get("category"),
+    is_public: false,
     progress: 0,
     status: "new",
     sender_id: user.id,
@@ -136,6 +137,10 @@ export const getTickets = async (searchParams) => {
     const offsetPage = (page - 1) * ticketPerPage;
 
     let filterQuery = {};
+    let queryBuilder = supabase
+      .from("tickets")
+      .select(`"*", profiles("*"), responses("*")`)
+      .range(offsetPage, offsetPage + ticketPerPage - 1);
     if (profile?.role === "user") {
       filterQuery.sender_id = profile.id;
     }
@@ -156,12 +161,11 @@ export const getTickets = async (searchParams) => {
       case "resolved":
         filterQuery.status = filter;
         break;
+      case "public":
+        filterQuery = {};
+        queryBuilder = queryBuilder.eq("is_public", true);
+        break;
     }
-
-    let queryBuilder = supabase
-      .from("tickets")
-      .select(`"*", profiles("*"), responses("*")`)
-      .range(offsetPage, offsetPage + ticketPerPage - 1);
 
     if (Object.keys(filterQuery).length !== 0) {
       queryBuilder = queryBuilder.match(filterQuery);
